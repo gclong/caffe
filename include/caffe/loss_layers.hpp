@@ -307,6 +307,41 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> diff_;
 };
 
+
+/*
+HuberLoss implemented by gclong 20151001, please note that:
+1. the threshold of huber function is fixed as 1.0 in this version;
+2. forward_cpu and forward_gpu output L1 loss, for better monitoring the training. 
+*/
+template <typename Dtype>
+class HuberLossLayer : public LossLayer<Dtype> {
+public:
+	explicit HuberLossLayer(const LayerParameter& param)
+		: LossLayer<Dtype>(param), diff_() {}
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "HuberLoss"; }
+	virtual inline bool AllowForceBackward(const int bottom_index) const {
+		return true;
+	}
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	Blob<Dtype> diff_, huber_;
+};
+
+
+
 /**
  * @brief Computes the hinge loss for a one-of-many classification task.
  *
